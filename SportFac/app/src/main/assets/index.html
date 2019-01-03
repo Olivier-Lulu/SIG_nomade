@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/ol.css" type="text/css">
+    <style>
+        .map {
+            height: 600px;
+            width:600px;
+            background: #f8f4f0;
+        }
+        .ol-popup {
+            position: absolute;
+            background-color: white;
+            -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+            filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #cccccc;
+            bottom: 12px;
+            left: -50px;
+            min-width: 280px;
+        }
+        .ol-popup:after, .ol-popup:before {
+            top: 100%;
+            border: solid transparent;
+            content: " ";
+            height: 0;
+            width: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+        .ol-popup:after {
+            border-top-color: white;
+            border-width: 10px;
+            left: 48px;
+            margin-left: -10px;
+        }
+        .ol-popup:before {
+            border-top-color: #cccccc;
+            border-width: 11px;
+            left: 48px;
+            margin-left: -11px;
+        }
+        .ol-popup-closer {
+            text-decoration: none;
+            position: absolute;
+            top: 2px;
+            right: 8px;
+        }
+        .ol-popup-closer:after {
+            content: "✖";
+        }
+    </style>
+    <script src="./build/ol.js"></script>
+    <title>carte campus</title>
+</head>
+<body>
+<h2>My Map</h2>
+<div id="map" class="map"></div>
+<div id="popup" class="ol-popup">
+    <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+    <div id="popup-content"></div>
+</div>
+<div id="err" style="display: none;"></div>
+
+<script type="text/javascript">
+
+    //adresse du geoserver
+    //const addr = 'localhost';
+    const addr = '192.168.1.14';
+
+    //fonction pour recuperer de maniere synchrone le resultat d'un get
+    function httpGet(theUrl)
+    {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open( "GET", theUrl, false );
+        xmlHttp.send( null );
+        return xmlHttp.responseText;
+    }
+
+    //TGCM sinon ca marche pas sur mon portable
+    var requestAnimationFrame = window.requestAnimationFrame
+        || window.webkitRequestAnimationFrame
+        || window.mozRequestAnimationFrame
+        || window.msRequestAnimationFrame
+        || function(callback) { return setTimeout(callback, 1000 / 60); };
+
+
+    //definition du style des batiment et parking
+    function batimentStyle(feature, resolution) {
+        const properties = feature.getProperties();
+
+        if(properties.name == null){
+            //si ca a pas de nom en gris
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(45, 45, 45, 0.8)'
+                })
+            });
+        }else {
+            if (properties.name == 'parking') {
+                //si c'est un parking en gris clair
+                return new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: 'rgba(46, 44, 62, 0.4)'
+                    })
+                });
+            } else {
+                //si ca a un nom en gris
+                return new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: 'rgba(45, 45, 45, 0.8)'
+                    })
+                });
+            }
+        }
+    }
+
+    //definition du style des rues
+    function voieStyle(feature, resolution) {
+        const properties = feature.getProperties();
+        if(properties.name == null){
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(163, 125, 48, 0.6)'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(163, 125, 48, 0.6)'
+                })
+            });
+        }else {
+            //TODO difference entre voie, avenue, rue ...
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(163, 125, 48, 0.6)'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(163, 125, 48, 0.6)'
+                })
+            });
+
+        }
+    }
+
+    //definition du style des machin naturel
+    function natureStyle(feature, resolution) {
+        const properties = feature.getProperties();
+
+        if (properties.type == 'basin' || properties.type == 'water' || properties.type == 'river') {
+            //si c'est de l'eau en bleu
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(0, 0, 255, 0.7)'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(0, 0, 255, 0.7)'
+                })
+            });
+        }else{
+            if(properties.type == 'grass' || properties.type == 'scrub' || properties.type == 'meadow'){
+                //si c'est de l'herbe en vert clair
+                return new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: 'rgba(103, 124, 48, 0.6)'
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: 'rgba(103, 124, 48, 0.6)'
+                    })
+                });
+            }else{
+                if(properties.type == 'wood' || properties.type == 'forest'){
+                    //si c'est de la foret en vert foncer
+                    return new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0, 76, 0, 0.7)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: 'rgba(0, 76, 0, 0.7)'
+                        })
+                    });
+                }else{
+                    if(properties.type == 'brownfield'){
+                        //si c'est un friche en orange
+                        return new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: 'rgba(170, 142, 0, 0.7)'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: 'rgba(170, 142, 0, 0.7)'
+                            })
+                        });
+                    }else{
+                        //sinon on panique et on affiche ce qui a pas de style dans la console
+                        console.log(properties);
+                    }
+                }
+            }
+        }
+    }
+
+    //definition du style des rues
+    function eqmStyle(feature, resolution) {
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(0, 0, 0, 1)'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(0, 0, 0, 1)'
+                })
+            });
+    }
+
+    //fonction pour recuperer un layer de type vector a partirs des capabilities
+    function getVectorLayer(capabilities,layerName, style) {
+        var wmtsOption = ol.source.WMTS.optionsFromCapabilities(capabilities,{
+            layer: layerName,
+            matrixSet: 'EPSG:4326',
+            format: 'application/vnd.mapbox-vector-tile'
+        });
+        var src = new ol.source.WMTS(wmtsOption);
+        return new ol.layer.VectorTile({
+            source: new ol.source.VectorTile({
+                tileUrlFunction: src.getTileUrlFunction(),
+                tileGrid: src.getTileGrid(),
+                format: new ol.format.MVT()
+            }),
+            style: style
+        });
+    }
+
+    //recuperation des capabilities
+    var caps = new ol.format.WMTSCapabilities().read(httpGet('http://'+ addr +':8080/geoserver/gwc/service/wmts?request=getcapabilities'));
+    //var omsLayer = new ol.layer.Tile({source: new ol.source.OSM()});
+    //on recupere les different layers
+    var batimentLayer = getVectorLayer(caps,'projetSIG:batiments',batimentStyle);
+    var natureLayer = getVectorLayer(caps,'projetSIG:nature',natureStyle);
+    var routeLayer = getVectorLayer(caps,'projetSIG:voies',voieStyle);
+    var eqmSport = getVectorLayer(caps,'projetSIG:equipementsport',eqmStyle);
+
+    //on definit la map
+    var map = new ol.Map({
+        layers: [natureLayer, routeLayer, batimentLayer, eqmSport],
+        target: 'map',
+        view: new ol.View({
+            projection: 'EPSG:4326',
+            center: [1.9395,47.8438],
+            zoom: 16,
+            extent: [1.92377,47.83913,1.94151,47.84943]
+        })
+    });
+    map.getView().setMinZoom(15);
+    //definit les limite de chaque layer
+    map.getLayers().getArray()[0].setExtent([1.92377,47.83913,1.94151,47.84943]);
+    map.getLayers().getArray()[1].setExtent([1.92377,47.83913,1.94151,47.84943]);
+    map.getLayers().getArray()[2].setExtent([1.92377,47.83913,1.94151,47.84943]);
+    map.getLayers().getArray()[3].setExtent([1.92377,47.83913,1.94151,47.84943]);
+
+    //recupere les coordonée de l'utilisateur
+    var geolocation = new ol.Geolocation({
+        // enableHighAccuracy must be set to true to have the heading value.
+        tracking: true,
+        trackingOptions: {
+            enableHighAccuracy: true
+        },
+        projection: map.getView().getProjection()
+    });
+
+    //gestion des erreur de geolocation
+    geolocation.on('error', function(error) {
+        var info = document.getElementById('err');
+        info.innerHTML = error.message;
+        info.style.display = '';
+    });
+
+    //met a jours le centre de la carte apres le chargement de la position
+    geolocation.on('change', function() {
+        map.getView().setCenter(geolocation.getPosition());
+    });
+
+
+    //gere l'accuraycy ?
+    var accuracyFeature = new ol.Feature();
+    geolocation.on('change:accuracyGeometry', function() {
+        accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
+    });
+
+    //gestion de la position
+    var positionFeature = new ol.Feature();
+    positionFeature.setStyle(new ol.style.Style({
+        image: new ol.style.Circle({
+            radius: 6,
+            fill: new ol.style.Fill({
+                color: '#3399CC'
+            }),
+            stroke: new ol.style.Stroke({
+                color: '#fff',
+                width: 2
+            })
+        })
+    }));
+
+    //update la position
+    geolocation.on('change:position', function() {
+        var coordinates = geolocation.getPosition();
+        positionFeature.setGeometry(coordinates ?
+            new ol.geom.Point(coordinates) : null);
+    });
+
+    //ajout de la position sur la carte
+    map.addLayer(new ol.layer.Vector({
+        source: new ol.source.Vector({
+            features: [accuracyFeature, positionFeature]
+        })
+    }));
+
+    /**
+     * Elements that make up the popup.
+     */
+    var container = document.getElementById('popup');//le pop-up
+    var content = document.getElementById('popup-content');//le contenut du pop-up
+    var closer = document.getElementById('popup-closer');//la croix qui ferme le pop-up
+
+
+    /**
+     * Create an overlay to anchor the popup to the map.
+     */
+    var overlay = new ol.Overlay({
+        element: container,
+        autoPan: true,
+        autoPanAnimation: {
+            duration: 250
+        }
+    });
+    map.addOverlay(overlay);
+
+    /**
+     * Add a click handler to hide the popup.
+     * @return {boolean} Don't follow the href.
+     */
+    closer.onclick = function() {
+        overlay.setPosition(undefined);
+        closer.blur();
+        return false;
+    };
+
+
+    var target;
+    map.on('singleclick', function(evt) {
+        var feature = map.forEachFeatureAtPixel(evt.pixel,function (feature) {
+            return feature;
+        });
+        var feat = feature.properties_;
+        if(feat){
+            if(feat.layer == "batiments" || feat.layer == "equipementsport"){
+                var name;
+                if(feat.layer == "batiments"){
+                    name = feat.name;
+                 }else {
+                    name = feat.type;
+                }
+                content.innerHTML = '<p>'+name+'</p>' +
+                                    '<button onclick="goTo()"> go !</button>';
+                target = feature;
+                overlay.setPosition(evt.coordinate);
+            }
+        }
+    });
+
+
+    function goTo(){
+        console.log(target);
+    }
+</script>
+</body>
+</html>
