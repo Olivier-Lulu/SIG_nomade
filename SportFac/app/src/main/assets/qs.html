@@ -14,47 +14,78 @@
 <body>
 <h2>My Map</h2>
 <div id="map" class="map"></div>
+</body>
+</html>
+
+
 <script type="text/javascript">
-      var map = new ol.Map({
+    function markerStyle (feature, resolution){
+        const properties = feature.getProperties();
+
+        return new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgba(45, 45, 45, 0.8)'
+            })
+        });
+    };
+
+    var map = new ol.Map({
         target: 'map',
         layers: [
-          new ol.layer.Tile({
-            source: new ol.source.OSM()
-          })
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
         ],
         view: new ol.View({
-          center: ol.proj.fromLonLat([37.41, 8.82]),
-          zoom: 4
+            center: ol.proj.fromLonLat([37.41, 8.82]),
+            zoom: 4
         })
-      });
+    });
 
-      var markers = new OpenLayers.Layer.Markers("Marker");
-      var datas = JSON.parse(Android.getMarkersAsJson());
+    var vectorSource = new ol.source.Vector({ });
+    var jsonStr = Android.getMarkersAsJson();
+    Android.logFromJs("JSON : " + jsonStr);
 
-      for (var marker in datas)
-      {
-        var lonLat = new OpenLayers.LonLat(datas[marker].lon, datas[marker].lat).transform(
-            new OpenLayers.Projection("EPSG:4326"),
-            map.getProjectionObject()
-          );
-        markers.addMarker(new OpenLayers.Marker(lonLat));
-      }
+    var datas = JSON.parse(Android.getMarkersAsJson());
+    //var keyIndex = 0;
 
-      map.addLayer(markers);
+    for (var marker in datas)
+    {
+        //Android.logFromJs("marker : " + Object.keys(datas)[keyIndex] + "||lon : " + datas[marker].lon + "||lat : " + datas[marker].lat);
+        var marker = new ol.Feature({
+            type: 'icon',
+            geometry: new ol.geom.Point([datas[marker].lon, datas[marker].lat])
+        });
+        //keyIndex++;
 
-      map.on('click', function(event)
-      {
+        vectorSource.addFeature(marker);
+    }
+
+    var markers = new ol.layer.Vector({
+        source : vectorSource,
+        style : markerStyle
+    });
+
+    map.addLayer(markers);
+
+    Android.logFromJs("Map loaded");
+
+    map.on("click", function(event)
+    {
         var markerLon = event.originalEvent.offsetX;
         var markerLat = event.originalEvent.offsetY;
+
+        Android.logFromJs("touch at : " + markerLon + " " + markerLat);
 
         Android.insertMarker(markerLon, markerLat);
 
         markers.addMarker(new OpenLayers.Marker(
             new OpenLayers.LonLat(markerLon, markerLat).transform(
-                new OpenLayers.Projection("EPSG:4326"),
-                map.getProjectionObject()
-            );
-      });
+                    new OpenLayers.Projection("EPSG:4326"),
+                    map.getProjectionObject()
+                )
+            )
+        );
+    });
+
     </script>
-</body>
-</html>

@@ -1,6 +1,7 @@
 package projet.secunomade.orleans.univ.sigproj.utils;
 
 import android.content.Context;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import org.json.JSONException;
@@ -22,14 +23,15 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public void insertMarker(float lon, float lat) {
+    public void insertMarker(double lon, double lat) {
         markerDAO.insertMarker(new Marker(markerDAO.getMaxId() + 1, lon, lat));
     }
 
     @JavascriptInterface
     public String getMarkersAsJson () {
-        List<Marker> markers = markerDAO.getAll();
+
         JSONObject jsonPivot = new JSONObject();
+        List<Marker> markers = markerDAO.getAll();
 
         try {
             int markerId;
@@ -47,6 +49,11 @@ public class WebAppInterface {
         }
 
         return jsonPivot.toString();
+    }
+
+    @JavascriptInterface
+    public void logFromJs (String msg){
+        Log.d("fromJS", msg);
     }
 
 }

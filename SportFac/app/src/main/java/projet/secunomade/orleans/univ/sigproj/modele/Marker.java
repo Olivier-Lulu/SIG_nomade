@@ -3,12 +3,12 @@ package projet.secunomade.orleans.univ.sigproj.modele;
 public class Marker {
 
     private int id;
-    private float lon;
-    private float lat;
+    private double lon;
+    private double lat;
 
     public Marker() {
     }
-    public Marker(int id, float lon, float lat) {
+    public Marker(int id, double lon, double lat) {
         this.id = id;
         this.lon = lon;
         this.lat = lat;
@@ -21,17 +21,17 @@ public class Marker {
         this.id = id;
     }
 
-    public float getLon() {
+    public double getLon() {
         return lon;
     }
-    public void setLon(float lon) {
+    public void setLon(double lon) {
         this.lon = lon;
     }
 
-    public float getLat() {
+    public double getLat() {
         return lat;
     }
-    public void setLat(float lat) {
+    public void setLat(double lat) {
         this.lat = lat;
     }
 

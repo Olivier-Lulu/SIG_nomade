@@ -2,13 +2,9 @@ package projet.secunomade.orleans.univ.sigproj.activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.webkit.WebViewClient;
 
 import projet.secunomade.orleans.univ.sigproj.R;
 import projet.secunomade.orleans.univ.sigproj.dao.MarkerDAO;
@@ -23,32 +19,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         WebView webView = findViewById(R.id.webView);
+
         this.markerDAO = new MarkerDAO(this);
-        webView.addJavascriptInterface(new WebAppInterface(this, markerDAO), "Android");
         markerDAO.open();
-
+        markerDAO.removeAllMarkers();
         webView.getSettings().setJavaScriptEnabled(true);
+        webView.addJavascriptInterface(new WebAppInterface(this, markerDAO), "Android");
+
+        markerDAO.insertMarker(new Marker(0, (double) 1, 1));
+        markerDAO.insertMarker(new Marker(1, (double) 2, 2));
+
+        WebView.setWebContentsDebuggingEnabled(true);
         webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebViewClient(new WebViewClient());
         webView.loadUrl("file:///android_asset/qs.html");
-
-        JSONObject jsonPivot = new JSONObject();
-        try {
-            int markerId;
-
-            for (int i =0; i<4; i++) {
-                JSONObject coorinates = new JSONObject();
-                coorinates.put("lon",(double) 33);
-                coorinates.put("lat",(double) 42);
-
-                jsonPivot.put("" + i, coorinates);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        Log.d("fullTest", jsonPivot.toString());
     }
 
     @Override

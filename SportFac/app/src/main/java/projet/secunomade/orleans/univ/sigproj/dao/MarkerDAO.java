@@ -68,6 +68,12 @@ public class MarkerDAO {
         return bdd.delete(TABLE_MARKER, COL_ID + " = " +id, null);
     }
 
+    public int removeAllMarkers () {
+        int result = bdd.delete(TABLE_MARKER, "", null);
+        appDatabase. onUpgrade(bdd, 1, 1);
+        return result;
+    }
+
     public Marker getMarkerWithId(int id){
         //Récupère dans un Cursor les valeurs correspondant à un livre contenu dans la BDD (ici on sélectionne le livre grâce à son titre)
         Cursor c = bdd.query(TABLE_MARKER, new String[] {COL_ID, COL_LON, COL_LAT}, COL_ID + " LIKE \"" + id +"\"",
@@ -79,11 +85,15 @@ public class MarkerDAO {
         Cursor c = bdd.rawQuery("SELECT * FROM " + TABLE_MARKER, new String[] {});
 
         LinkedList<Marker> markers = new LinkedList<>();
-        while (!(c.isLast())) {
-            markers.addLast(cursorToMarker(c));
-            c.moveToNext();
+        while (c.moveToNext()) {
+            Marker marker = new Marker();
+            marker.setId(c.getInt(NUM_COL_ID));
+            marker.setLon(c.getDouble(NUM_COL_LON));
+            marker.setLat(c.getDouble(NUM_COL_LAT));
+
+            markers.add(marker);
         }
-        markers.addLast(cursorToMarker(c));
+        c.close();
 
         return markers;
     }
@@ -96,22 +106,19 @@ public class MarkerDAO {
     //SQLiteDatabase ne renvoyant que des Cursor (pointeurs sur entree de tableau), il faut bien
     //un traducteur
     private Marker cursorToMarker(Cursor c){
-        //si aucun élément n'a été retourné dans la requête, on renvoie null
+
         if (c.getCount() == 0)
             return null;
 
-        //Sinon on se place sur le premier élément
         c.moveToFirst();
-        //On créé un livre
         Marker marker= new Marker();
-        //on lui affecte toutes les infos grâce aux infos contenues dans le Cursor
+
         marker.setId(c.getInt(NUM_COL_ID));
-        marker.setLon(c.getFloat(NUM_COL_LON));
-        marker.setLat(c.getFloat(NUM_COL_LAT));
-        //On ferme le cursor
+        marker.setLon(c.getDouble(NUM_COL_LON));
+        marker.setLat(c.getDouble(NUM_COL_LAT));
+
         c.close();
 
-        //On retourne le livre
         return marker;
     }
 
