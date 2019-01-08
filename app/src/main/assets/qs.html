@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
+    <style>
+      .map {
+        height: 400px;
+        width: 100%;
+      }
+    </style>
+    <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+    <title>OpenLayers example</title>
+</head>
+<body>
+<h2>My Map</h2>
+<div id="map" class="map"></div>
+</body>
+</html>
+
+
+
+<script type="text/javascript">
+    function markerStyle (feature, resolution){
+        const properties = feature.getProperties();
+
+        return new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 7,
+                fill: new ol.style.Fill({color: 'black'}),
+                stroke: new ol.style.Stroke({
+                    color: 'white', width: 2
+                })
+            })
+        });
+    };
+
+    var map = new ol.Map({
+        target: 'map',
+        layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
+        ],
+        view: new ol.View({
+            center: ol.proj.fromLonLat([37.41, 8.82]),
+            zoom: 4
+        })
+    });
+
+    var vectorSource = new ol.source.Vector({ });
+    var jsonStr = Android.getMarkersAsJson();
+    Android.logFromJs("JSON : " + jsonStr);
+
+    var datas = JSON.parse(Android.getMarkersAsJson());
+    //var keyIndex = 0;
+
+    for (var marker in datas)
+    {
+        //Android.logFromJs("marker : " + Object.keys(datas)[keyIndex] + "||lon : " + datas[marker].lon + "||lat : " + datas[marker].lat);
+        var marker = new ol.Feature({
+            type: 'icon',
+            geometry: new ol.geom.Point([datas[marker].lon, datas[marker].lat])
+        });
+        //keyIndex++;
+
+        vectorSource.addFeature(marker);
+    }
+
+    var markers = new ol.layer.Vector({
+        source : vectorSource,
+        style : markerStyle
+    });
+
+    map.addLayer(markers);
+
+    Android.logFromJs("Map loaded");
+
+    map.on("singleclick", function(event)
+    {
+        var touchCoordinates = event.coordinate;
+
+        Android.insertMarker(touchCoordinates[0], touchCoordinates[1]);
+
+        var marker = new ol.Feature({
+            type: 'icon',
+            geometry: new ol.geom.Point(touchCoordinates)
+        });
+
+        vectorSource.addFeature(marker);
+        Android.logFromJs("marker added");
+    });
+
+    </script>
