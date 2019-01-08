@@ -1,4 +1,4 @@
-package projet.secunomade.orleans.univ.sigproj.utils;
+package projet.graciannethevret.SIG.utils;
 
 import android.content.Context;
 import android.util.Log;
@@ -9,8 +9,9 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-import projet.secunomade.orleans.univ.sigproj.dao.MarkerDAO;
-import projet.secunomade.orleans.univ.sigproj.modele.Marker;
+import projet.graciannethevret.SIG.dao.MarkerDAO;
+import projet.graciannethevret.SIG.modele.Marker;
+
 
 public class WebAppInterface {
     private Context mContext;

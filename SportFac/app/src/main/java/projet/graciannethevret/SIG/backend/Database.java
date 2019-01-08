@@ -1,4 +1,4 @@
-package projet.secunomade.orleans.univ.sigproj.backend;
+package projet.graciannethevret.SIG.backend;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

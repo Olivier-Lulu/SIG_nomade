@@ -1,16 +1,15 @@
-package projet.secunomade.orleans.univ.sigproj.dao;
+package projet.graciannethevret.SIG.dao;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import projet.secunomade.orleans.univ.sigproj.backend.Database;
-import projet.secunomade.orleans.univ.sigproj.modele.Marker;
+import projet.graciannethevret.SIG.backend.Database;
+import projet.graciannethevret.SIG.modele.Marker;
 
 public class MarkerDAO {
 

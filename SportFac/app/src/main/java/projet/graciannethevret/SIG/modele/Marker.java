@@ -1,4 +1,4 @@
-package projet.secunomade.orleans.univ.sigproj.modele;
+package projet.graciannethevret.SIG.modele;
 
 public class Marker {
 

@@ -1,4 +1,4 @@
-package projet.secunomade.orleans.univ.sigproj.activities;
+package projet.graciannethevret.SIG.activities;
 
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -9,10 +9,11 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import projet.graciannethevret.SIG.dao.MarkerDAO;
+import projet.graciannethevret.SIG.modele.Marker;
+import projet.graciannethevret.SIG.utils.WebAppInterface;
 import projet.secunomade.orleans.univ.sigproj.R;
-import projet.secunomade.orleans.univ.sigproj.dao.MarkerDAO;
-import projet.secunomade.orleans.univ.sigproj.modele.Marker;
-import projet.secunomade.orleans.univ.sigproj.utils.WebAppInterface;
+
 
 public class MainActivity extends AppCompatActivity {
 
