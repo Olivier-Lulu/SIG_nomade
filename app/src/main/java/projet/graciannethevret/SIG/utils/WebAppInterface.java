@@ -64,4 +64,13 @@ public class WebAppInterface {
         return mContext.getSharedPreferences(Options.PREF,0).getString(Options.KEYGEO,Options.IPGEO_DEFAULT);
     }
 
+    @JavascriptInterface
+    public String[] getCritere(){
+        String[] temp = Options.CRITERE;
+        for(String s : temp)
+            Log.d("webapp",s);
+        Options.CRITERE = null;
+        return temp;
+    }
+
 }

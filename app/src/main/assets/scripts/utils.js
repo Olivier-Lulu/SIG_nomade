@@ -8,44 +8,44 @@ function httpGet(theUrl)
 }
 
 //definition du style des batiment et parking
-   function batimentStyle(feature, resolution) {
-        const properties = feature.getProperties();
-        //console.log(properties);
-        if(properties.type === 'batiment' || properties.type === 'salleSport' || properties.type === 'hopital' || properties.type === 'cabinetMedical'){
-            //si batiment en gris
-            return new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: 'rgba(45, 45, 45, 0.8)'
-                })
-            });
-        }else {
-            if (properties.type === 'parking') {
-                //si c'est un parking en gris clair
-                return new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: 'rgba(46, 44, 62, 0.4)'
-                    })
-                });
-            } else {
-                if(properties.type === 'parcoursSante'){
-                    return new ol.style.Style({
-                        fill: new ol.style.Fill({
-                            color: 'rgba(103, 124, 48, 0.6)'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: 'rgba(103, 124, 48, 0.6)'
-                        })
-                    });
-                }
-            }
-        }
-        //si c'est inconnue en rouge
+function batimentStyle(feature, resolution) {
+    const properties = feature.getProperties();
+    //console.log(properties);
+    if(properties.type === 'batiment' || properties.type === 'salleSport' || properties.type === 'hopital' || properties.type === 'cabinetMedical'){
+        //si batiment en gris
         return new ol.style.Style({
             fill: new ol.style.Fill({
-                color: 'rgba(255, 0, 0, 0.8)'
+                color: 'rgba(45, 45, 45, 0.8)'
             })
         });
+    }else {
+        if (properties.type === 'parking') {
+            //si c'est un parking en gris clair
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(46, 44, 62, 0.4)'
+                })
+            });
+        } else {
+            if(properties.type === 'parcoursSante'){
+                return new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: 'rgba(103, 124, 48, 0.6)'
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: 'rgba(103, 124, 48, 0.6)'
+                    })
+                });
+            }
+        }
     }
+    //si c'est inconnue en rouge
+    return new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: 'rgba(255, 0, 0, 0.8)'
+        })
+    });
+}
 
 //definition du style des rues
 function voieStyle(feature, resolution) {
@@ -131,33 +131,33 @@ function natureStyle(feature, resolution) {
 
 //definition du style des rues
 function eqmStyle(feature, resolution) {
-        return new ol.style.Style({
-            fill: new ol.style.Fill({
-                color: 'rgba(0, 0, 0, 1)'
-            }),
-            stroke: new ol.style.Stroke({
-                color: 'rgba(0, 0, 0, 1)'
-            })
-        });
+    return new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: 'rgba(0, 0, 0, 1)'
+        }),
+        stroke: new ol.style.Stroke({
+            color: 'rgba(0, 0, 0, 1)'
+        })
+    });
 }
 
 //fonction pour recuperer un layer de type vector a partirs des capabilities
 function getVectorLayer(capabilities,layerName, style) {
-        const wmtsOption = ol.source.WMTS.optionsFromCapabilities(capabilities,{
-            layer: layerName,
-            matrixSet: 'EPSG:4326',
-            format: 'application/vnd.mapbox-vector-tile'
-        });
-        const src = new ol.source.WMTS(wmtsOption);
-        return new ol.layer.VectorTile({
-            source: new ol.source.VectorTile({
-                tileUrlFunction: src.getTileUrlFunction(),
-                tileGrid: src.getTileGrid(),
-                format: new ol.format.MVT()
-            }),
-            style: style
-        });
-    }
+    const wmtsOption = ol.source.WMTS.optionsFromCapabilities(capabilities,{
+        layer: layerName,
+        matrixSet: 'EPSG:4326',
+        format: 'application/vnd.mapbox-vector-tile'
+    });
+    const src = new ol.source.WMTS(wmtsOption);
+    return new ol.layer.VectorTile({
+        source: new ol.source.VectorTile({
+            tileUrlFunction: src.getTileUrlFunction(),
+            tileGrid: src.getTileGrid(),
+            format: new ol.format.MVT()
+        }),
+        style: style
+    });
+}
 
 function markerStyle (feature, resolution){
     const properties = feature.getProperties();
@@ -196,8 +196,8 @@ function distanceBetween(pointA, pointB){
 function showMarkerPopup (content, overlay, evt, marker)
 {
     content.innerHTML = 'Nom : <input type="text" id="markerNom" size="10"><br>'
-                        + 'Tag : <input type="text" id="markerTag" size="10"><br>'
-                        + '<button onClick="enregistrerMarker()">Enregistrer</button>';
+        + 'Tag : <input type="text" id="markerTag" size="10"><br>'
+        + '<button onClick="enregistrerMarker()">Enregistrer</button>';
     //la fonction enregistrerMarker a besoin du contexte d'execution de la page pour fonctionner
     //donc si on aurait la laisser dans ce fichier, elle est dans index.html pour avoir le contexte
     //sous les yeux
@@ -205,4 +205,3 @@ function showMarkerPopup (content, overlay, evt, marker)
 }
 
 function goTo(){ console.log(target); }
-

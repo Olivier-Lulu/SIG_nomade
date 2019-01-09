@@ -1,7 +1,9 @@
 package projet.graciannethevret.SIG.activities;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.TextureView;
 import android.view.View;
@@ -13,6 +15,7 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,11 +50,19 @@ public class Recherche extends AppCompatActivity {
     }
 
     public void rechercher(View v){
-        List<String> listeCritere = new LinkedList<>();
+        List<String> listeCritere = new ArrayList<>();
         for(int i=0; i < checkListe.length;i++){
             if(checkListe[i].isChecked()){
+                Log.d("Recherche",Options.TYPES[i]);
                 listeCritere.add(Options.TYPES[i]);
             }
         }
+        String [] crit = new String[listeCritere.size()];
+        for(int i=0; i < listeCritere.size();i++){
+            crit[i] = listeCritere.get(i);
+        }
+        if(crit.length != 0)
+            Options.CRITERE = crit;
+        startActivity(new Intent(this, Carte.class));
     }
 }
