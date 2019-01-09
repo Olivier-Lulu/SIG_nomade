@@ -10,10 +10,12 @@ public class Database extends SQLiteOpenHelper {
     private static final String COL_ID = "id";
     private static final String COL_LON = "lon";
     private static final String COL_LAT = "lat";
+    private static final String COL_NOM = "nom";
+    private static final String COL_TAG = "tag";
 
     private static final String CREATE_BDD = "CREATE TABLE " + TABLE_MARKER + " ("
             + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_LON + " REAL NOT NULL, "
-            + COL_LAT + " REAL NOT NULL);";
+            + COL_LAT + " REAL NOT NULL, " + COL_NOM + " TEXT, " + COL_TAG + " TEXT );";
 
     public Database(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
@@ -30,7 +32,6 @@ public class Database extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE " + TABLE_MARKER + ";");
         onCreate(db);
     }
-
 
 
 }

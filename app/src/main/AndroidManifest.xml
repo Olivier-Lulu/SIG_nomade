@@ -10,7 +10,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <!-- <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" /> -->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -28,7 +27,7 @@
         <activity android:name=".activities.Menu" />
         <activity android:name=".activities.Recherche" />
         <activity android:name=".activities.Carte" />
-        <activity android:name=".activities.Option"></activity>
+        <activity android:name=".activities.Option"/>
     </application>
 
 </manifest>

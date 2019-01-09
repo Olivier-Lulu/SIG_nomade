@@ -24,6 +24,10 @@ public class MarkerDAO {
     private static final int NUM_COL_LON = 1;
     private static final String COL_LAT = "lat";
     private static final int NUM_COL_LAT = 2;
+    private static final String COL_NOM = "nom";
+    private static final int NUM_COL_NOM = 3;
+    private static final String COL_TAG = "tag";
+    private static final int NUM_COL_TAG = 4;
 
     private SQLiteDatabase bdd;
 
@@ -51,6 +55,9 @@ public class MarkerDAO {
 
         values.put(COL_LON, marker.getLon());
         values.put(COL_LAT, marker.getLat());
+        values.put(COL_NOM, marker.getNom());
+        values.put(COL_TAG, marker.getTag());
+
 
         return bdd.insert(TABLE_MARKER, null, values);
     }
@@ -60,6 +67,8 @@ public class MarkerDAO {
 
         values.put(COL_LON, marker.getLon());
         values.put(COL_LAT, marker.getLat());
+        values.put(COL_NOM, marker.getNom());
+        values.put(COL_TAG, marker.getTag());
 
         return bdd.update(TABLE_MARKER, values, COL_ID + "=" + id, null);
     }
@@ -70,13 +79,13 @@ public class MarkerDAO {
 
     public int removeAllMarkers () {
         int result = bdd.delete(TABLE_MARKER, "", null);
-        appDatabase. onUpgrade(bdd, 1, 1);
+        appDatabase.onUpgrade(bdd,1,1);
         return result;
     }
 
     public Marker getMarkerWithId(int id){
         //Récupère dans un Cursor les valeurs correspondant à un livre contenu dans la BDD (ici on sélectionne le livre grâce à son titre)
-        Cursor c = bdd.query(TABLE_MARKER, new String[] {COL_ID, COL_LON, COL_LAT}, COL_ID + " LIKE \"" + id +"\"",
+        Cursor c = bdd.query(TABLE_MARKER, new String[] {COL_ID, COL_LON, COL_LAT, COL_NOM, COL_TAG}, COL_ID + " LIKE \"" + id +"\"",
                 null, null, null, null);
         return cursorToMarker(c);
     }
@@ -84,12 +93,16 @@ public class MarkerDAO {
     public List<Marker> getAll() {
         Cursor c = bdd.rawQuery("SELECT * FROM " + TABLE_MARKER, new String[] {});
 
+        Log.d("debugDB", "got " + c.getCount() + " results");
+
         LinkedList<Marker> markers = new LinkedList<>();
         while (c.moveToNext()) {
             Marker marker = new Marker();
             marker.setId(c.getInt(NUM_COL_ID));
             marker.setLon(c.getDouble(NUM_COL_LON));
             marker.setLat(c.getDouble(NUM_COL_LAT));
+            marker.setNom(c.getString(NUM_COL_NOM));
+            marker.setTag(c.getString(NUM_COL_TAG));
 
             markers.add(marker);
         }
@@ -100,9 +113,13 @@ public class MarkerDAO {
 
     public int getMaxId () {
         Cursor c = bdd.rawQuery("SELECT max(id) FROM " + TABLE_MARKER, new String[] {});
-        Log.d("debugDB", "got " + c.getCount() + " results.");
-        c.moveToFirst();
-        return c.getInt(0);
+        if (c.getCount() != 0) {
+            c.moveToFirst();
+            return c.getInt(0);
+        } else {
+            return 0;
+        }
+
     }
 
     //SQLiteDatabase ne renvoyant que des Cursor (pointeurs sur entree de tableau), il faut bien
@@ -118,6 +135,8 @@ public class MarkerDAO {
         marker.setId(c.getInt(NUM_COL_ID));
         marker.setLon(c.getDouble(NUM_COL_LON));
         marker.setLat(c.getDouble(NUM_COL_LAT));
+        marker.setNom(c.getString(NUM_COL_NOM));
+        marker.setTag(c.getString(NUM_COL_TAG));
 
         c.close();
 

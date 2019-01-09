@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import projet.graciannethevret.SIG.R;
 
+import static projet.graciannethevret.SIG.utils.Options.IPGEO_DEFAULT;
 import static projet.graciannethevret.SIG.utils.Options.KEYGEO;
 import static projet.graciannethevret.SIG.utils.Options.PREF;
 
@@ -21,7 +22,7 @@ public class Option extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_option);
         ipGeo = findViewById(R.id.editIP);
-        String ip = getSharedPreferences(PREF,0).getString(KEYGEO,"192.168.1.39");
+        String ip = getSharedPreferences(PREF,0).getString(KEYGEO,IPGEO_DEFAULT);
         ipGeo.getText().clear();
         ipGeo.getText().append(ip);
         ipGeo.setOnEditorActionListener(

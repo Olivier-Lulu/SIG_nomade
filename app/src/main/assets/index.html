@@ -3,56 +3,9 @@
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="css/ol.css" type="text/css">
-    <style>
-        .map {
-            height: 600px;
-            width:600px;
-            background: #f8f4f0;
-        }
-        .ol-popup {
-            position: absolute;
-            background-color: white;
-            -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-            filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #cccccc;
-            bottom: 12px;
-            left: -50px;
-            min-width: 280px;
-        }
-        .ol-popup:after, .ol-popup:before {
-            top: 100%;
-            border: solid transparent;
-            content: " ";
-            height: 0;
-            width: 0;
-            position: absolute;
-            pointer-events: none;
-        }
-        .ol-popup:after {
-            border-top-color: white;
-            border-width: 10px;
-            left: 48px;
-            margin-left: -10px;
-        }
-        .ol-popup:before {
-            border-top-color: #cccccc;
-            border-width: 11px;
-            left: 48px;
-            margin-left: -11px;
-        }
-        .ol-popup-closer {
-            text-decoration: none;
-            position: absolute;
-            top: 2px;
-            right: 8px;
-        }
-        .ol-popup-closer:after {
-            content: "✖";
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css" type="text/css" >
     <script src="./build/ol.js"></script>
+    <script src="scripts/utils.js"></script>
     <title>carte campus</title>
 </head>
 <body>
@@ -65,19 +18,8 @@
 <div id="err" style="display: none;"></div>
 
 <script type="text/javascript">
-
     //adresse du geoserver
-    //const addr = 'localhost';
-    const addr = '192.168.1.14';
-
-    //fonction pour recuperer de maniere synchrone le resultat d'un get
-    function httpGet(theUrl)
-    {
-        const xmlHttp = new XMLHttpRequest();
-        xmlHttp.open( "GET", theUrl, false );
-        xmlHttp.send( null );
-        return xmlHttp.responseText;
-    }
+    const addr = Android.getGeoServerIp();
 
     //TGCM sinon ca marche pas sur mon portable
     const requestAnimationFrame = window.requestAnimationFrame
@@ -85,161 +27,6 @@
         || window.mozRequestAnimationFrame
         || window.msRequestAnimationFrame
         || function(callback) { return setTimeout(callback, 1000 / 60); };
-
-
-    //definition du style des batiment et parking
-    function batimentStyle(feature, resolution) {
-        const properties = feature.getProperties();
-        console.log(properties);
-        if(properties.type === 'batiment' || properties.type === 'salleSport' || properties.type === 'hopital' || properties.type === 'cabinetMedical'){
-            //si batiment en gris
-            return new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: 'rgba(45, 45, 45, 0.8)'
-                })
-            });
-        }else {
-            if (properties.type === 'parking') {
-                //si c'est un parking en gris clair
-                return new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: 'rgba(46, 44, 62, 0.4)'
-                    })
-                });
-            } else {
-                if(properties.type === 'parcoursSante'){
-                    return new ol.style.Style({
-                        fill: new ol.style.Fill({
-                            color: 'rgba(103, 124, 48, 0.6)'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: 'rgba(103, 124, 48, 0.6)'
-                        })
-                    });
-                }
-            }
-        }
-        //si c'est inconnue en rouge
-        return new ol.style.Style({
-            fill: new ol.style.Fill({
-                color: 'rgba(255, 0, 0, 0.8)'
-            })
-        });
-    }
-
-    //definition du style des rues
-    function voieStyle(feature, resolution) {
-        const properties = feature.getProperties();
-        if(properties.name == null){
-            return new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: 'rgba(163, 125, 48, 0.6)'
-                }),
-                stroke: new ol.style.Stroke({
-                    color: 'rgba(163, 125, 48, 0.6)'
-                })
-            });
-        }else {
-            //TODO difference entre voie, avenue, rue ...
-            return new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: 'rgba(163, 125, 48, 0.6)'
-                }),
-                stroke: new ol.style.Stroke({
-                    color: 'rgba(163, 125, 48, 0.6)'
-                })
-            });
-
-        }
-    }
-
-    //definition du style des machin naturel
-    function natureStyle(feature, resolution) {
-        const properties = feature.getProperties();
-
-        if (properties.type === 'basin' || properties.type === 'water' || properties.type === 'river') {
-            //si c'est de l'eau en bleu
-            return new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: 'rgba(0, 0, 255, 0.7)'
-                }),
-                stroke: new ol.style.Stroke({
-                    color: 'rgba(0, 0, 255, 0.7)'
-                })
-            });
-        }else{
-            if(properties.type === 'grass' || properties.type === 'scrub' || properties.type === 'meadow'){
-                //si c'est de l'herbe en vert clair
-                return new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: 'rgba(103, 124, 48, 0.6)'
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: 'rgba(103, 124, 48, 0.6)'
-                    })
-                });
-            }else{
-                if(properties.type === 'wood' || properties.type === 'forest'){
-                    //si c'est de la foret en vert foncer
-                    return new ol.style.Style({
-                        fill: new ol.style.Fill({
-                            color: 'rgba(0, 76, 0, 0.7)'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: 'rgba(0, 76, 0, 0.7)'
-                        })
-                    });
-                }else{
-                    if(properties.type === 'brownfield'){
-                        //si c'est un friche en orange
-                        return new ol.style.Style({
-                            fill: new ol.style.Fill({
-                                color: 'rgba(170, 142, 0, 0.7)'
-                            }),
-                            stroke: new ol.style.Stroke({
-                                color: 'rgba(170, 142, 0, 0.7)'
-                            })
-                        });
-                    }else{
-                        //sinon on panique et on affiche ce qui a pas de style dans la console
-                        console.log(properties);
-                    }
-                }
-            }
-        }
-    }
-
-    //fonction pour recuperer un layer de type vector a partirs des capabilities
-    function getVectorLayer(capabilities,layerName, style) {
-        const wmtsOption = ol.source.WMTS.optionsFromCapabilities(capabilities,{
-            layer: layerName,
-            matrixSet: 'EPSG:4326',
-            format: 'application/vnd.mapbox-vector-tile'
-        });
-        const src = new ol.source.WMTS(wmtsOption);
-        return new ol.layer.VectorTile({
-            source: new ol.source.VectorTile({
-                tileUrlFunction: src.getTileUrlFunction(),
-                tileGrid: src.getTileGrid(),
-                format: new ol.format.MVT()
-            }),
-            style: style
-        });
-    }
-
-    function markerStyle (feature, resolution){
-        const properties = feature.getProperties();
-
-        return new ol.style.Style({
-            image: new ol.style.Circle({
-                radius: 7,
-                fill: new ol.style.Fill({color: 'black'}),
-                stroke: new ol.style.Stroke({
-                    color: 'white', width: 2
-                })
-            })
-        });
-    };
 
     //recuperation des capabilities
     const caps = new ol.format.WMTSCapabilities().read(httpGet('http://'+ addr +':8080/geoserver/gwc/service/wmts?request=getcapabilities'));
@@ -267,7 +54,7 @@
     map.getLayers().getArray()[1].setExtent([1.92377,47.83913,1.94151,47.84943]);
     map.getLayers().getArray()[2].setExtent([1.92377,47.83913,1.94151,47.84943]);
 
-    console.log(map.getView().getResolution());
+    //console.log(map.getView().getResolution());
 
     //recupere les coordonée de l'utilisateur
     const geolocation = new ol.Geolocation({
@@ -295,7 +82,6 @@
             map.getView().setCenter(geolocation.getPosition());
         }
     });
-
 
     //gere l'accuraycy ?
     const accuracyFeature = new ol.Feature();
@@ -333,22 +119,23 @@
     }));
 
     var vectorSource = new ol.source.Vector({ });
-    var jsonStr = Android.getMarkersAsJson();
-    Android.logFromJs("JSON : " + jsonStr);
 
     var datas = JSON.parse(Android.getMarkersAsJson());
-    //var keyIndex = 0;
+    var markersDict = {};
+    var keyIndex = 0;
 
     for (var marker in datas)
     {
-        //Android.logFromJs("marker : " + Object.keys(datas)[keyIndex] + "||lon : " + datas[marker].lon + "||lat : " + datas[marker].lat);
-        var marker = new ol.Feature({
-            type: 'icon',
-            geometry: new ol.geom.Point([datas[marker].lon, datas[marker].lat])
-        });
-        //keyIndex++;
+        markersDict[Object.keys(datas)[keyIndex]] = [datas[marker].nom, datas[marker].tag];
 
-        vectorSource.addFeature(marker);
+        var markerFeature = new ol.Feature({
+            type: 'marker',
+            geometry: new ol.geom.Point([datas[marker].lon, datas[marker].lat]),
+            id : Object.keys(datas)[keyIndex]
+        });
+        keyIndex++;
+
+        vectorSource.addFeature(markerFeature);
     }
 
     var markers = new ol.layer.Vector({
@@ -358,31 +145,12 @@
 
     map.addLayer(markers);
 
-    map.on("singleclick", function(event)
-    {
-        var touchCoordinates = event.coordinate;
-
-        Android.insertMarker(touchCoordinates[0], touchCoordinates[1]);
-
-        var marker = new ol.Feature({
-            type: 'icon',
-            geometry: new ol.geom.Point(touchCoordinates)
-        });
-
-        vectorSource.addFeature(marker);
-    });
-
-    /**
-     * Elements that make up the popup.
-     */
+    //Composants du popup
     const container = document.getElementById('popup');//le pop-up
     const content = document.getElementById('popup-content');//le contenut du pop-up
     const closer = document.getElementById('popup-closer');//la croix qui ferme le pop-up
 
-
-    /**
-     * Create an overlay to anchor the popup to the map.
-     */
+    //overlay pour positionner le popup
     const overlay = new ol.Overlay({
         element: container,
         autoPan: true,
@@ -399,37 +167,58 @@
     closer.onclick = function() {
         overlay.setPosition(undefined);
         closer.blur();
+
+        if (flagMarkerInInstance != 0)
+        {
+            vectorSource.removeFeature(marker);
+            flagMarkerInInstance = 0;
+        }
+
         return false;
     };
 
-    function toRad(x) {
-        return x * Math.PI / 180;
+    function enregistrerMarker()
+    {
+        var markerName = document.getElementById("markerNom").value;
+        var markerTag = document.getElementById("markerTag").value;
+
+        if (markerName == "")
+        {
+            closer.onclick();
+        }
+        else
+        {
+            var markerCoords = marker.getGeometry().getCoordinates();
+            Android.insertMarker(markerCoords[0], markerCoords[1], markerName, markerTag);
+            flagMarkerInInstance = 0;
+            closer.onclick();
+        }
+
     }
 
-    //formule de distance entre deux point en longitude/latitude vers des metre par la formule de haversine
-    //https://www.movable-type.co.uk/scripts/latlong.html
-    //les resultats me parraissent un peut grand mais bon
-    function distanceBetween(pointA, pointB){
-        var R = 6371e3; // metres
-        var phi1 = toRad(pointA[1]);
-        var phi2 = toRad(pointB[1]);
-        var deltaPhi = toRad(pointB[1]-pointA[1]);
-        var deltaLambda = toRad(pointA[0]-pointB[0]);
-
-        var a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
-            Math.cos(phi1) * Math.cos(phi2) *
-            Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-        return R * c;
-    }
+    var marker;
+    var markerNom;
+    var flagMarkerInInstance = 0;
 
     var target;
     map.on('singleclick', function(evt) {
-        const feature = map.forEachFeatureAtPixel(evt.pixel,function (feature) {
+        const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
             return feature;
         });
-        if(feature) {
+
+        if (flagMarkerInInstance != 0) {
+            vectorSource.removeFeature(marker);
+            flagMarkerInInstance = 0;
+        }
+
+        var touchCoordinates = evt.coordinate;
+        marker = new ol.Feature({
+            type: 'icon',
+            geometry: new ol.geom.Point(touchCoordinates)
+        });
+
+        if (feature) {
+
             const feat = feature.properties_;
             if (feat) {
                 if (feat.layer === 'batiments') {
@@ -442,14 +231,41 @@
                     target = feature;
                     overlay.setPosition(evt.coordinate);
                 }
+                else if (feat.layer === 'markers')
+                {
+
+                }
+                else {
+                    flagMarkerInInstance = 1;
+                    vectorSource.addFeature(marker);
+                    showMarkerPopup(content, overlay, evt);
+                }
             }
+            else {
+                //Android.logFromJs("touch");
+                if (feature.get("type") == "marker")
+                {
+                    content.innerHTML = 'Nom : <input type="text" id="markerNom" size="10"><br>'
+                            + 'Tag : <input type="text" id="markerTag" size="10"><br>'
+                            + '<button onClick="enregistrerMarker()">Enregistrer</button>';
+
+                    var markerId = feature.get("id");
+                    document.getElementById("markerNom").value = markersDict[markerId][0];
+                    document.getElementById("markerTag").value = markersDict[markerId][1];
+
+                    overlay.setPosition(evt.coordinate);
+                }
+                /* */
+                //getKeys -> type, geometry, id
+            }
+        }
+        else {
+            flagMarkerInInstance = 1;
+            vectorSource.addFeature(marker);
+            showMarkerPopup(content, overlay, evt);
         }
     });
 
-
-    function goTo(){
-        console.log(target);
-    }
 </script>
 </body>
 </html>
