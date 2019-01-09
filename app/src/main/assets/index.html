@@ -68,7 +68,7 @@
 
     //adresse du geoserver
     //const addr = 'localhost';
-    const addr = '192.168.1.39';
+    const addr = '192.168.1.14';
 
     //fonction pour recuperer de maniere synchrone le resultat d'un get
     function httpGet(theUrl)
@@ -90,16 +90,16 @@
     //definition du style des batiment et parking
     function batimentStyle(feature, resolution) {
         const properties = feature.getProperties();
-
-        if(properties.name == null){
-            //si ca a pas de nom en gris
+        console.log(properties);
+        if(properties.type === 'batiment' || properties.type === 'salleSport' || properties.type === 'hopital' || properties.type === 'cabinetMedical'){
+            //si batiment en gris
             return new ol.style.Style({
                 fill: new ol.style.Fill({
                     color: 'rgba(45, 45, 45, 0.8)'
                 })
             });
         }else {
-            if (properties.name === 'parking') {
+            if (properties.type === 'parking') {
                 //si c'est un parking en gris clair
                 return new ol.style.Style({
                     fill: new ol.style.Fill({
@@ -107,14 +107,24 @@
                     })
                 });
             } else {
-                //si ca a un nom en gris
-                return new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: 'rgba(45, 45, 45, 0.8)'
-                    })
-                });
+                if(properties.type === 'parcoursSante'){
+                    return new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: 'rgba(103, 124, 48, 0.6)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: 'rgba(103, 124, 48, 0.6)'
+                        })
+                    });
+                }
             }
         }
+        //si c'est inconnue en rouge
+        return new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgba(255, 0, 0, 0.8)'
+            })
+        });
     }
 
     //definition du style des rues
@@ -199,18 +209,6 @@
         }
     }
 
-    //definition du style des rues
-    function eqmStyle(feature, resolution) {
-            return new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: 'rgba(0, 0, 0, 1)'
-                }),
-                stroke: new ol.style.Stroke({
-                    color: 'rgba(0, 0, 0, 1)'
-                })
-            });
-    }
-
     //fonction pour recuperer un layer de type vector a partirs des capabilities
     function getVectorLayer(capabilities,layerName, style) {
         const wmtsOption = ol.source.WMTS.optionsFromCapabilities(capabilities,{
@@ -245,17 +243,16 @@
 
     //recuperation des capabilities
     const caps = new ol.format.WMTSCapabilities().read(httpGet('http://'+ addr +':8080/geoserver/gwc/service/wmts?request=getcapabilities'));
-    //var omsLayer = new ol.layer.Tile({source: new ol.source.OSM()});
     //on recupere les different layers
-    const batimentLayer = getVectorLayer(caps,'projetSIG:batiments',batimentStyle);
+    //console.log(caps);
+    const batimentLayer = getVectorLayer(caps,'projetSIG:batimentsBis',batimentStyle);
     const natureLayer = getVectorLayer(caps,'projetSIG:nature',natureStyle);
     const routeLayer = getVectorLayer(caps,'projetSIG:voies',voieStyle);
     routeLayer.setMaxResolution(1/100000); // cache les route avant un certain niveau de zoom
-    const eqmSport = getVectorLayer(caps,'projetSIG:equipementsport',eqmStyle);
 
     //on definit la map
     const map = new ol.Map({
-        layers: [natureLayer, routeLayer, batimentLayer, eqmSport],
+        layers: [natureLayer, routeLayer, batimentLayer],
         target: 'map',
         view: new ol.View({
             projection: 'EPSG:4326',
@@ -269,7 +266,6 @@
     map.getLayers().getArray()[0].setExtent([1.92377,47.83913,1.94151,47.84943]);
     map.getLayers().getArray()[1].setExtent([1.92377,47.83913,1.94151,47.84943]);
     map.getLayers().getArray()[2].setExtent([1.92377,47.83913,1.94151,47.84943]);
-    map.getLayers().getArray()[3].setExtent([1.92377,47.83913,1.94151,47.84943]);
 
     console.log(map.getView().getResolution());
 
@@ -291,7 +287,7 @@
     });
 
     //met a jours le centre de la carte apres le chargement de la position
-    let centre = false;
+    var centre = false;
     geolocation.on('change', function() {
         //on centre la carte si c'est pas deja mais on ne la recentre pas ensuite
         if(!centre){
@@ -428,7 +424,7 @@
         return R * c;
     }
 
-    let target;
+    var target;
     map.on('singleclick', function(evt) {
         const feature = map.forEachFeatureAtPixel(evt.pixel,function (feature) {
             return feature;
@@ -436,13 +432,8 @@
         if(feature) {
             const feat = feature.properties_;
             if (feat) {
-                if (feat.layer === 'batiments' || feat.layer === 'equipementsport') {
-                    let name;
-                    if (feat.layer === 'batiments') {
-                        name = feat.name;
-                    } else {
-                        name = feat.type;
-                    }
+                if (feat.layer === 'batiments') {
+                    const name = feat.name;
                     const distance = distanceBetween(evt.coordinate,geolocation.getPosition());
                     content.innerHTML = '<p> nom: ' + name + '</p>'
                                         +'<p>coordonée: '+evt.coordinate+'</p>'

@@ -27,6 +27,7 @@
         </activity>
         <activity android:name=".activities.Menu" />
         <activity android:name=".activities.Recherche" />
+        <activity android:name=".activities.Carte" />
         <activity android:name=".activities.Option"></activity>
     </application>
 
