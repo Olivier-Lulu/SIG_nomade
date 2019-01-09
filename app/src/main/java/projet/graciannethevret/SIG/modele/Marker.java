@@ -5,13 +5,17 @@ public class Marker {
     private int id;
     private double lon;
     private double lat;
+    private String nom;
+    private String tag;
 
     public Marker() {
     }
-    public Marker(int id, double lon, double lat) {
+    public Marker(int id, double lon, double lat, String nom, String tag) {
         this.id = id;
         this.lon = lon;
         this.lat = lat;
+        this.nom = nom;
+        this.tag = tag;
     }
 
     public int getId() {
@@ -33,6 +37,20 @@ public class Marker {
     }
     public void setLat(double lat) {
         this.lat = lat;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+    public void setTag(String tag) {
+        this.tag = tag;
     }
 
 }

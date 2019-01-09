@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
         this.markerDAO = new MarkerDAO(this);
         markerDAO.open();
-        markerDAO.removeAllMarkers();
+        //markerDAO.removeAllMarkers();
         WebSettings webSetting = webView.getSettings();
         webSetting.setJavaScriptEnabled(true);
         webView.addJavascriptInterface(new WebAppInterface(this, markerDAO), "Android");
@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
             webView.getSettings().setAllowUniversalAccessFromFileURLs(true);
+
         WebView.setWebContentsDebuggingEnabled(true);
         webView.setWebChromeClient(new WebChromeClient(){
             @Override
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
                 callback.invoke(origin, true, false);
             }
         });
+
         webView.setWebViewClient(new WebViewClient());
         webSetting.setDatabaseEnabled(true);
         webSetting.setDomStorageEnabled(true);
