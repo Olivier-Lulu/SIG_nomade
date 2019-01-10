@@ -1,13 +1,29 @@
 package projet.graciannethevret.SIG.utils;
 
 import android.content.Context;
+import android.util.JsonReader;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import projet.graciannethevret.SIG.dao.MarkerDAO;
 import projet.graciannethevret.SIG.modele.Marker;
@@ -65,12 +81,106 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public String[] getCritere(){
-        String[] temp = Options.CRITERE;
-        for(String s : temp)
-            Log.d("webapp",s);
+    public boolean getCritere(){
+        return Options.CRITERE != null;
+    }
+
+    @JavascriptInterface
+    public String getLocationCritere(String location){
+        String[] loc = location.split(",");
+        double longitude = Double.parseDouble(loc[0]);
+        double latitude = Double.parseDouble(loc[1]);
+        Marker closest = null;
+        double distance = Double.POSITIVE_INFINITY;
+
+        List<Marker> markers = null;
+        try {
+            markers = requestBatiments();
+            for (Marker m : markers) {
+                if (contains(m.getTag(), Options.CRITERE)) {
+                    double distanceB = (longitude - m.getLon()) * (longitude - m.getLon()) + (latitude - m.getLat()) * (latitude - m.getLat());
+                    if (distanceB < distance) {
+                        closest = m;
+                        distance = distanceB;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        markers = markerDAO.getAll();
+        for (Marker m : markers) {
+            if (contains(m.getTag(), Options.CRITERE)) {
+                double distanceB = (longitude - m.getLon()) * (longitude - m.getLon()) + (latitude - m.getLat()) * (latitude - m.getLat());
+                if (distanceB < distance) {
+                    closest = m;
+                    distance = distanceB;
+                }
+            }
+        }
         Options.CRITERE = null;
-        return temp;
+        if (closest == null) {
+            return null;
+        } else {
+            try {
+                JSONObject coordinates = new JSONObject();
+                coordinates.put("lon", closest.getLon());
+                coordinates.put("lat", closest.getLat());
+                coordinates.put("nom", closest.getNom());
+                coordinates.put("tag", closest.getTag());
+                return coordinates.toString();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    private List<Marker> requestBatiments() throws IOException {
+        List<Marker> liste = new ArrayList<>();
+        String urls = "http://"+getGeoServerIp() +":8081/batiments?";
+        for (int i = 0; i < Options.CRITERE.length;i++){
+            urls += "criteres="+Options.CRITERE[i];
+            if(i != Options.CRITERE.length-1){
+                urls += "&";
+            }
+        }
+        URL url = new URL(urls);
+        HttpURLConnection httpclient = (HttpURLConnection) url.openConnection();
+        if (httpclient.getResponseCode() == 200) {
+            InputStream responseBody = httpclient.getInputStream();
+            InputStreamReader responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
+            JsonReader jsonReader = new JsonReader(responseBodyReader);
+            jsonReader.beginArray();
+            while(jsonReader.hasNext()){
+                jsonReader.beginObject();
+                jsonReader.nextName();
+                int id = jsonReader.nextInt();
+                jsonReader.nextName();
+                double lon = jsonReader.nextDouble();
+                jsonReader.nextName();
+                double lat = jsonReader.nextDouble();
+                jsonReader.nextName();
+                String nom = jsonReader.nextString();
+                jsonReader.nextName();
+                String tag = jsonReader.nextString();
+                liste.add(new Marker(id,lon,lat,nom,tag));
+                jsonReader.endObject();
+            }
+            jsonReader.endArray();
+            jsonReader.close();
+            return liste;
+        } else {
+            return null;
+        }
+    }
+
+    private boolean contains(String tag, String[] critere) {
+        for(String s : critere)
+            if(s.equals(tag))
+                return true;
+        return false;
     }
 
 }

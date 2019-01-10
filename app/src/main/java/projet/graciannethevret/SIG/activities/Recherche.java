@@ -53,7 +53,6 @@ public class Recherche extends AppCompatActivity {
         List<String> listeCritere = new ArrayList<>();
         for(int i=0; i < checkListe.length;i++){
             if(checkListe[i].isChecked()){
-                Log.d("Recherche",Options.TYPES[i]);
                 listeCritere.add(Options.TYPES[i]);
             }
         }

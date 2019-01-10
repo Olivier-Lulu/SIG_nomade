@@ -1,23 +1,3 @@
-//test si objet est dans array
-function contains(objet, array)
-{
-    return (array.indexOf(objet) > -1);
-}
-
-//return true si featA est plus proche de pos
-//return false si featB est plus proche de pos
-function plusProche(pos,featA, featB){
-    const pA = featA.getGeometry().getClosestPoint(pos);
-    const pB = featB.getGeometry().getClosestPoint(pos);
-    const distanceA = (pA[0]-pos[0])*(pA[0]-pos[0])+(pA[1]-pos[1])*(pA[1]-pos[1]);
-    const distanceB = (pB[0]-pos[0])*(pB[0]-pos[0])+(pB[1]-pos[1])*(pB[1]-pos[1]);
-    if(distanceA < distanceB){
-        return true;
-    }else{
-        return false;
-    }
-}
-
 function addGeoloc(map){
     //recupere les coordonée de l'utilisateur
     const geolocation = new ol.Geolocation({
@@ -41,33 +21,17 @@ function addGeoloc(map){
     geolocation.on('change', function() {
         //on centre la carte si c'est pas deja mais on ne la recentre pas ensuite
         if(!centre){
-            //TODO
             centre = true;
             const critere = Android.getCritere();
-            Android.logFromJs(critere);
-            if(critere != undefined) {
-                var features = map.getLayers().getArray()[2].getSource().getFeatures();
-                var closest = features[0];
-                for (var feat in features) {
-                    if (containes(feat.getProperties().type, critere)) {
-                        if (plusProche(geolocation.getPosition(),feat, closest)) {
-                            closest = feat;
-                        }
-                    }
+            if(critere) {
+                const temp = Android.getLocationCritere('' + geolocation.getPosition());
+                if(temp) {
+                    const point = JSON.parse(temp);
+                    map.getView().setCenter([point.lon, point.lat]);
+                }else{
+                    Android.logFromJs("centrer sur loc");
+                    map.getView().setCenter(geolocation.getPosition());
                 }
-                features = map.getLayers().getArray()[3].getSource().getFeatures();
-                for (feat in features) {
-                    if (containes(feat.type, critere)) {
-                        if (plusProche(geolocation.getPosition(),feat, closest)) {
-                            closest = feat;
-                        }
-                    }
-                }
-                map.getView().setCenter(closest.getGeometry().getClosestPoint(geolocation.getPosition()));
-                Android.logFromJs(''+closest);
-                const overlay = map.getOverlays().getArray()[0];
-                content.innerHTML = '<p> nom: </p>';
-                overlay.setPosition(closest.getGeometry().getClosestPoint(geolocation.getPosition()));
             }else{
                 Android.logFromJs("centrer sur loc");
                 map.getView().setCenter(geolocation.getPosition());
