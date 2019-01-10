@@ -11,11 +11,10 @@ import android.webkit.WebViewClient;
 
 import projet.graciannethevret.SIG.R;
 import projet.graciannethevret.SIG.dao.MarkerDAO;
-import projet.graciannethevret.SIG.modele.Marker;
 import projet.graciannethevret.SIG.utils.WebAppInterface;
 
 
-public class MainActivity extends AppCompatActivity {
+public class Carte extends AppCompatActivity {
 
     private MarkerDAO markerDAO;
 
@@ -32,24 +31,18 @@ public class MainActivity extends AppCompatActivity {
         webSetting.setJavaScriptEnabled(true);
         webView.addJavascriptInterface(new WebAppInterface(this, markerDAO), "Android");
 
-        //markerDAO.insertMarker(new Marker(0, 4085456.267019187, 943933.9458492125));
-        //markerDAO.insertMarker(new Marker(1, 4787985.424590649, 748729.556904125));
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
             webView.getSettings().setAllowUniversalAccessFromFileURLs(true);
 
-        WebView.setWebContentsDebuggingEnabled(true);
         webView.setWebChromeClient(new WebChromeClient(){
             @Override
             public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
                 callback.invoke(origin, true, false);
             }
         });
-
-        webView.setWebViewClient(new WebViewClient());
         webSetting.setDatabaseEnabled(true);
         webSetting.setDomStorageEnabled(true);
-        webSetting.setGeolocationDatabasePath(getFilesDir().getPath());
+        webSetting.setGeolocationDatabasePath(getFilesDir().getPath()); //deprecated mais obligatoirs T.T
         webSetting.setGeolocationEnabled(true);
         webView.loadUrl("file:///android_asset/index.html");
     }

@@ -52,6 +52,5 @@ public class Marker {
     public void setTag(String tag) {
         this.tag = tag;
     }
-
 }
 
