@@ -27,6 +27,13 @@ function addGeoloc(map){
                 const temp = Android.getLocationCritere('' + geolocation.getPosition());
                 if(temp) {
                     const point = JSON.parse(temp);
+                    const content = document.getElementById('popup-content');//le contenut du pop-up
+                    const overlay = map.getOverlays().getArray()[0];
+                    const distance = distanceBetween([point.lon, point.lat],geolocation.getPosition());
+                    content.innerHTML = '<p> nom: ' + point.name + '</p>'
+                        +'<p>coordonée: '+[point.lon, point.lat]+'</p>'
+                        +'<p>distance: '+distance+'</p>';
+                    overlay.setPosition([point.lon, point.lat]);
                     map.getView().setCenter([point.lon, point.lat]);
                 }else{
                     Android.logFromJs("centrer sur loc");

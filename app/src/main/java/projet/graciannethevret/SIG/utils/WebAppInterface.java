@@ -96,12 +96,14 @@ public class WebAppInterface {
         List<Marker> markers = null;
         try {
             markers = requestBatiments();
-            for (Marker m : markers) {
-                if (contains(m.getTag(), Options.CRITERE)) {
-                    double distanceB = (longitude - m.getLon()) * (longitude - m.getLon()) + (latitude - m.getLat()) * (latitude - m.getLat());
-                    if (distanceB < distance) {
-                        closest = m;
-                        distance = distanceB;
+            if(markers != null) {
+                for (Marker m : markers) {
+                    if (contains(m.getTag(), Options.CRITERE)) {
+                        double distanceB = (longitude - m.getLon()) * (longitude - m.getLon()) + (latitude - m.getLat()) * (latitude - m.getLat());
+                        if (distanceB < distance) {
+                            closest = m;
+                            distance = distanceB;
+                        }
                     }
                 }
             }

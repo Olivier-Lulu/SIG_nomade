@@ -203,5 +203,3 @@ function showMarkerPopup (content, overlay, evt, marker)
     //sous les yeux
     overlay.setPosition(evt.coordinate);
 }
-
-function goTo(){ console.log(target); }

@@ -139,7 +139,6 @@
     var marker;
     var flagMarkerInInstance = 0;
 
-    var target;
     map.on('singleclick', function(evt) {
         const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
             return feature;
@@ -165,9 +164,7 @@
                     const distance = distanceBetween(evt.coordinate,geolocation.getPosition());
                     content.innerHTML = '<p> nom: ' + name + '</p>'
                                         +'<p>coordonée: '+evt.coordinate+'</p>'
-                                        +'<p>distance: '+distance+'</p>'
-                                        +'<button onclick="goTo()"> go !</button>';
-                    target = feature;
+                                        +'<p>distance: '+distance+'</p>';
                     overlay.setPosition(evt.coordinate);
                 }
                 else if (feat.layer === 'markers')
