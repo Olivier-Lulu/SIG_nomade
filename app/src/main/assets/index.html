@@ -217,12 +217,11 @@
 
         var touchCoordinates = evt.coordinate;
         marker = new ol.Feature({
-            type: 'icon',
+            type: 'marker',
             geometry: new ol.geom.Point(touchCoordinates)
         });
 
         if (feature) {
-
             const feat = feature.properties_;
             if (feat) {
 
@@ -265,7 +264,6 @@
 
                     overlay.setPosition(evt.coordinate);
                 }
-                /* */
                 //getKeys -> type, geometry, id
             }
         }
