@@ -34,13 +34,16 @@ public class Recherche extends AppCompatActivity {
         checkListe = new Switch[Options.TYPES.length];
         init();
     }
+
     private void init(){
         for(int i = 0; i < Options.TYPES.length;i++){
             String type = Options.TYPES[i];
             TableRow row = new TableRow(this);
             TextView text = new TextView(this);
+
             text.setText(type);
             row.addView(text);
+
             Switch check = new Switch(this);
             check.setGravity(Gravity.LEFT);
             checkListe[i] = check;
@@ -51,15 +54,18 @@ public class Recherche extends AppCompatActivity {
 
     public void rechercher(View v){
         List<String> listeCritere = new ArrayList<>();
+
         for(int i=0; i < checkListe.length;i++){
             if(checkListe[i].isChecked()){
                 listeCritere.add(Options.TYPES[i]);
             }
         }
+
         String [] crit = new String[listeCritere.size()];
         for(int i=0; i < listeCritere.size();i++){
             crit[i] = listeCritere.get(i);
         }
+
         if(crit.length != 0)
             Options.CRITERE = crit;
         startActivity(new Intent(this, Carte.class));

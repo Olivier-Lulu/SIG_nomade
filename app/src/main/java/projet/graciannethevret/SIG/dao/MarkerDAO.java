@@ -79,12 +79,11 @@ public class MarkerDAO {
 
     public int removeAllMarkers () {
         int result = bdd.delete(TABLE_MARKER, "", null);
-        appDatabase.onUpgrade(bdd,1,1);
+        bdd.rawQuery("DELETE FROM SQLITE_SEQUENCE WHERE NAME ='" + TABLE_MARKER + "';",  new String[] {});
         return result;
     }
 
     public Marker getMarkerWithId(int id){
-        //Récupère dans un Cursor les valeurs correspondant à un livre contenu dans la BDD (ici on sélectionne le livre grâce à son titre)
         Cursor c = bdd.query(TABLE_MARKER, new String[] {COL_ID, COL_LON, COL_LAT, COL_NOM, COL_TAG}, COL_ID + " LIKE \"" + id +"\"",
                 null, null, null, null);
         return cursorToMarker(c);
@@ -92,8 +91,6 @@ public class MarkerDAO {
 
     public List<Marker> getAll() {
         Cursor c = bdd.rawQuery("SELECT * FROM " + TABLE_MARKER, new String[] {});
-
-        Log.d("debugDB", "got " + c.getCount() + " results");
 
         LinkedList<Marker> markers = new LinkedList<>();
         while (c.moveToNext()) {

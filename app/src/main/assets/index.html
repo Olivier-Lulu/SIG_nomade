@@ -17,21 +17,16 @@
 </div>
 <div id="err" style="display: none;"></div>
 
+</body>
+</html>
 <script type="text/javascript">
     //adresse du geoserver
     const addr = Android.getGeoServerIp();
 
-    //TGCM sinon ca marche pas sur mon portable
-    const requestAnimationFrame = window.requestAnimationFrame
-        || window.webkitRequestAnimationFrame
-        || window.mozRequestAnimationFrame
-        || window.msRequestAnimationFrame
-        || function(callback) { return setTimeout(callback, 1000 / 60); };
-
     //recuperation des capabilities
     const caps = new ol.format.WMTSCapabilities().read(httpGet('http://'+ addr +':8080/geoserver/gwc/service/wmts?request=getcapabilities'));
-    //on recupere les different layers
-    //console.log(caps);
+
+    //on recupere les differents layers
     const batimentLayer = getVectorLayer(caps,'projetSIG:batimentsBis',batimentStyle);
     const natureLayer = getVectorLayer(caps,'projetSIG:nature',natureStyle);
     const routeLayer = getVectorLayer(caps,'projetSIG:voies',voieStyle);
@@ -49,39 +44,34 @@
         })
     });
     map.getView().setMinZoom(15);
-    //definit les limite de chaque layer
-    map.getLayers().getArray()[0].setExtent([1.92377,47.83913,1.94151,47.84943]);
-    map.getLayers().getArray()[1].setExtent([1.92377,47.83913,1.94151,47.84943]);
-    map.getLayers().getArray()[2].setExtent([1.92377,47.83913,1.94151,47.84943]);
 
-    var vectorSource = new ol.source.Vector({ });
+    var userMarkers = new ol.source.Vector({ });
 
     var datas = JSON.parse(Android.getMarkersAsJson());
-    var markersDict = {};
     var keyIndex = 0;
 
-    for (var marker in datas)
+    for (var cursorMarker in datas)
     {
-        markersDict[Object.keys(datas)[keyIndex]] = [datas[marker].nom, datas[marker].tag];
-
         var markerFeature = new ol.Feature({
             type: 'marker',
-            geometry: new ol.geom.Point([datas[marker].lon, datas[marker].lat]),
-            id : Object.keys(datas)[keyIndex]
+            geometry: new ol.geom.Point([datas[cursorMarker].lon, datas[cursorMarker].lat]),
+            id : Object.keys(datas)[keyIndex],
+            name : datas[cursorMarker].nom,
+            tag : datas[cursorMarker].tag
         });
         keyIndex++;
 
-        vectorSource.addFeature(markerFeature);
+        userMarkers.addFeature(markerFeature);
     }
 
     var markers = new ol.layer.Vector({
-        source : vectorSource,
+        source : userMarkers,
         style : markerStyle
     });
 
     map.addLayer(markers);
 
-    //Composants du popup
+    //Composants du popupgetMarkersAsJson
     const container = document.getElementById('popup');//le pop-up
     const content = document.getElementById('popup-content');//le contenut du pop-up
     const closer = document.getElementById('popup-closer');//la croix qui ferme le pop-up
@@ -96,18 +86,14 @@
     });
     map.addOverlay(overlay);
 
-
-    /**
-     * Add a click handler to hide the popup.
-     * @return {boolean} Don't follow the href.
-     */
+    //fonction pour fermer le popup
     closer.onclick = function() {
         overlay.setPosition(undefined);
         closer.blur();
 
         if (flagMarkerInInstance != 0)
         {
-            vectorSource.removeFeature(marker);
+            userMarkers.removeFeature(marker);
             flagMarkerInInstance = 0;
         }
 
@@ -117,7 +103,8 @@
     function enregistrerMarker()
     {
         var markerName = document.getElementById("markerNom").value;
-        var markerTag = document.getElementById("markerTag").value;
+        var markerTagSelect = document.getElementById("markerTag");
+        var markerTag = markerTagSelect.options[markerTagSelect.selectedIndex].value;
 
         if (markerName == "")
         {
@@ -127,14 +114,42 @@
         {
             var markerCoords = marker.getGeometry().getCoordinates();
             Android.insertMarker(markerCoords[0], markerCoords[1], markerName, markerTag);
+
             flagMarkerInInstance = 0;
             closer.onclick();
         }
 
     }
 
+    function deleteMarker(markerId)
+    {
+        Android.deleteMarkerWithId(markerId);
+
+        var loadedMarkers = userMarkers.getFeatures();
+
+        var index;
+        var loadedMarker;
+        for (index = 0; index < loadedMarkers.length; index++) {
+            loadedMarker = loadedMarkers[index];
+
+            if (loadedMarker.get("id") == markerId) {
+                userMarkers.removeFeature(loadedMarker);
+                closer.onclick();
+                break;
+            }
+        }
+    }
 
     const geolocation = addGeoloc(map);
+
+    var searchVectorSource = new ol.source.Vector({ });
+    search(searchVectorSource);
+    var searchLayer = new ol.layer.Vector ({
+         style : markerStyle,
+         source : searchVectorSource,
+         extent: [1.92377,47.83913,1.94151,47.84943]
+    });
+    map.addLayer(searchLayer);
 
     var marker;
     var flagMarkerInInstance = 0;
@@ -145,63 +160,56 @@
         });
 
         if (flagMarkerInInstance != 0) {
-            vectorSource.removeFeature(marker);
+            userMarkers.removeFeature(marker);
             flagMarkerInInstance = 0;
         }
 
         var touchCoordinates = evt.coordinate;
         marker = new ol.Feature({
             type: 'marker',
-            geometry: new ol.geom.Point(touchCoordinates)
+            geometry: new ol.geom.Point(touchCoordinates),
+            id : Android.getMaxId()
         });
+
+        const distance = distanceBetween(evt.coordinate,geolocation.getPosition());
 
         if (feature) {
             const feat = feature.properties_;
             if (feat) {
                 if (feat.layer === 'batimentsBis') {
                     const name = feat.name;
-                    const distance = distanceBetween(evt.coordinate,geolocation.getPosition());
                     content.innerHTML = '<p> nom: ' + name + '</p>'
                                         +'<p>coordonée: '+evt.coordinate+'</p>'
                                         +'<p>distance: '+distance+'</p>';
                     overlay.setPosition(evt.coordinate);
                 }
-                else if (feat.layer === 'markers')
-                {
-
-                }
                 else {
                     flagMarkerInInstance = 1;
-                    vectorSource.addFeature(marker);
-                    showMarkerPopup(content, overlay, evt);
+                    userMarkers.addFeature(marker);
+                    showMarkerPopup(content, overlay, evt, Android.getTags());
                 }
             }
             else {
-                //Android.logFromJs("touch");
-                if (feature.get("type") == "marker")
+                var featureType = feature.get("type");
+                if (featureType == 'marker' || featureType == 'searchedMarker')
                 {
-                    content.innerHTML = 'Nom : <input type="text" id="markerNom" size="10"><br>'
-                            + 'Tag : <input type="text" id="markerTag" size="10"><br>'
-                            + '<button onClick="enregistrerMarker()">Enregistrer</button>';
-
                     var markerId = feature.get("id");
-                    document.getElementById("markerNom").value = markersDict[markerId][0];
-                    document.getElementById("markerTag").value = markersDict[markerId][1];
+
+                    content.innerHTML = '<p> nom: ' + feature.get("name") + '</p>'
+                                        +'<p>coordonée: '+evt.coordinate+'</p>'
+                                        +'<p>distance: '+distance+'</p>';
+                    if (featureType == 'marker') {
+                        content.innerHTML += '<button onClick="deleteMarker(' + markerId + ')">Supprimer</button>';
+                    }
 
                     overlay.setPosition(evt.coordinate);
                 }
-                //getKeys -> type, geometry, id
             }
         }
         else {
             flagMarkerInInstance = 1;
-            vectorSource.addFeature(marker);
-            showMarkerPopup(content, overlay, evt);
+            userMarkers.addFeature(marker);
+            showMarkerPopup(content, overlay, evt, Android.getTags());
         }
     });
-
-
-
 </script>
-</body>
-</html>

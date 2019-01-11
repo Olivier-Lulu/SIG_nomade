@@ -28,7 +28,7 @@ public class Database extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        //On peut faire ce qu'on veut ici, autant reinitialiser la table
+        //On peut faire ce qu'on veut ici, autant reinitialiser la table dans notre cas, ça ira
         db.execSQL("DROP TABLE " + TABLE_MARKER + ";");
         onCreate(db);
     }

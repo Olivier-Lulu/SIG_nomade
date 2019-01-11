@@ -11,6 +11,7 @@ import android.webkit.WebViewClient;
 
 import projet.graciannethevret.SIG.R;
 import projet.graciannethevret.SIG.dao.MarkerDAO;
+import projet.graciannethevret.SIG.utils.Options;
 import projet.graciannethevret.SIG.utils.WebAppInterface;
 
 
@@ -24,9 +25,11 @@ public class Carte extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         WebView webView = findViewById(R.id.webView);
 
+        Options.IPGEO = getSharedPreferences(Options.PREF,0).getString(Options.KEYGEO,Options.IPGEO_DEFAULT);
+
         this.markerDAO = new MarkerDAO(this);
         markerDAO.open();
-        //markerDAO.removeAllMarkers();
+
         WebSettings webSetting = webView.getSettings();
         webSetting.setJavaScriptEnabled(true);
         webView.addJavascriptInterface(new WebAppInterface(this, markerDAO), "Android");

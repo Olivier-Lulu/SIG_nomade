@@ -10,14 +10,16 @@ function httpGet(theUrl)
 //definition du style des batiment et parking
 function batimentStyle(feature, resolution) {
     const properties = feature.getProperties();
-    //console.log(properties);
-    if(properties.type === 'batiment' || properties.type === 'salleSport' || properties.type === 'hopital' || properties.type === 'cabinetMedical'){
+
+    if(properties.type === 'batiment' || properties.type === 'salleSport' ||
+       properties.type === 'hopital' || properties.type === 'cabinetMedical'){
         //si batiment en gris
         return new ol.style.Style({
             fill: new ol.style.Fill({
                 color: 'rgba(45, 45, 45, 0.8)'
             })
         });
+
     }else {
         if (properties.type === 'parking') {
             //si c'est un parking en gris clair
@@ -26,6 +28,7 @@ function batimentStyle(feature, resolution) {
                     color: 'rgba(46, 44, 62, 0.4)'
                 })
             });
+
         } else {
             if(properties.type === 'parcoursSante'){
                 return new ol.style.Style({
@@ -39,6 +42,7 @@ function batimentStyle(feature, resolution) {
             }
         }
     }
+
     //si c'est inconnue en rouge
     return new ol.style.Style({
         fill: new ol.style.Fill({
@@ -59,8 +63,8 @@ function voieStyle(feature, resolution) {
                 color: 'rgba(163, 125, 48, 0.6)'
             })
         });
+
     }else {
-        //TODO difference entre voie, avenue, rue ...
         return new ol.style.Style({
             fill: new ol.style.Fill({
                 color: 'rgba(163, 125, 48, 0.6)'
@@ -73,7 +77,7 @@ function voieStyle(feature, resolution) {
     }
 }
 
-//definition du style des machin naturel
+//definition du style des elements naturels
 function natureStyle(feature, resolution) {
     const properties = feature.getProperties();
 
@@ -87,6 +91,7 @@ function natureStyle(feature, resolution) {
                 color: 'rgba(0, 0, 255, 0.7)'
             })
         });
+
     }else{
         if(properties.type === 'grass' || properties.type === 'scrub' || properties.type === 'meadow'){
             //si c'est de l'herbe en vert clair
@@ -98,9 +103,10 @@ function natureStyle(feature, resolution) {
                     color: 'rgba(103, 124, 48, 0.6)'
                 })
             });
+
         }else{
             if(properties.type === 'wood' || properties.type === 'forest'){
-                //si c'est de la foret en vert foncer
+                //si c'est de la foret en vert fonce
                 return new ol.style.Style({
                     fill: new ol.style.Fill({
                         color: 'rgba(0, 76, 0, 0.7)'
@@ -109,6 +115,7 @@ function natureStyle(feature, resolution) {
                         color: 'rgba(0, 76, 0, 0.7)'
                     })
                 });
+
             }else{
                 if(properties.type === 'brownfield'){
                     //si c'est un friche en orange
@@ -120,6 +127,7 @@ function natureStyle(feature, resolution) {
                             color: 'rgba(170, 142, 0, 0.7)'
                         })
                     });
+
                 }else{
                     //sinon on panique et on affiche ce qui a pas de style dans la console
                     console.log(properties);
@@ -129,19 +137,7 @@ function natureStyle(feature, resolution) {
     }
 }
 
-//definition du style des rues
-function eqmStyle(feature, resolution) {
-    return new ol.style.Style({
-        fill: new ol.style.Fill({
-            color: 'rgba(0, 0, 0, 1)'
-        }),
-        stroke: new ol.style.Stroke({
-            color: 'rgba(0, 0, 0, 1)'
-        })
-    });
-}
-
-//fonction pour recuperer un layer de type vector a partirs des capabilities
+//fonction pour recuperer un layer de type vector a partir des capabilities
 function getVectorLayer(capabilities,layerName, style) {
     const wmtsOption = ol.source.WMTS.optionsFromCapabilities(capabilities,{
         layer: layerName,
@@ -149,13 +145,15 @@ function getVectorLayer(capabilities,layerName, style) {
         format: 'application/vnd.mapbox-vector-tile'
     });
     const src = new ol.source.WMTS(wmtsOption);
+
     return new ol.layer.VectorTile({
         source: new ol.source.VectorTile({
             tileUrlFunction: src.getTileUrlFunction(),
             tileGrid: src.getTileGrid(),
             format: new ol.format.MVT()
         }),
-        style: style
+        style: style,
+        extent : [1.92377,47.83913,1.94151,47.84943]
     });
 }
 
@@ -176,7 +174,7 @@ function markerStyle (feature, resolution){
 
 function toRad(x) { return x * Math.PI / 180; }
 
-//formule de distance entre deux point en longitude/latitude vers des metre par la formule de haversine
+//formule de distance entre deux point en longitude/latitude vers des metre par la formule de Haversine
 //https://www.movable-type.co.uk/scripts/latlong.html
 function distanceBetween(pointA, pointB){
     var R = 6371e3; // metres
@@ -193,13 +191,50 @@ function distanceBetween(pointA, pointB){
     return R * c;
 }
 
-function showMarkerPopup (content, overlay, evt, marker)
+function showMarkerPopup (content, overlay, evt, tags)
 {
+    var tagsJson = JSON.parse(tags);
+
+    var selectHtml = '<select id="markerTag" size="10">';
+    for (index in tagsJson) {
+          selectHtml += '<option value="' + tagsJson[index] + '">' + tagsJson[index] + '</option>';
+    }
+    selectHtml += '</select>';
+
     content.innerHTML = 'Nom : <input type="text" id="markerNom" size="10"><br>'
-        + 'Tag : <input type="text" id="markerTag" size="10"><br>'
+        + 'Tag : ' + selectHtml + '<br>'
         + '<button onClick="enregistrerMarker()">Enregistrer</button>';
-    //la fonction enregistrerMarker a besoin du contexte d'execution de la page pour fonctionner
-    //donc si on aurait la laisser dans ce fichier, elle est dans index.html pour avoir le contexte
-    //sous les yeux
+
     overlay.setPosition(evt.coordinate);
+}
+
+//la fonction enregistrerMarker et deleteMarker a besoin du contexte d'execution de la page pour
+//fonctionner donc si on aurait la laisser dans ce fichier, elle est dans index.html pour avoir le
+//contexte sous les yeux
+
+function search (searchLayer)
+{
+    const critere = Android.getCritere();
+    if(critere) {
+        const temp = Android.getLocations();
+        if(temp) {
+            const points = JSON.parse(temp);
+
+            if (searchLayer) {
+                var marker;
+                var keyIndex = 0;
+                for (marker in points) {
+                    marker = new ol.Feature({
+                        name : points[marker].nom,
+                        type: 'searchedMarker',
+                        geometry: new ol.geom.Point([points[marker].lon, points[marker].lat]),
+                        id : Object.keys(points)[keyIndex]
+                    });
+                    keyIndex++;
+
+                    searchLayer.addFeature(marker);
+                }
+            }
+        }
+    }
 }

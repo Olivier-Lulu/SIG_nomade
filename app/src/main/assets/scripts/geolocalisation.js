@@ -1,7 +1,6 @@
 function addGeoloc(map){
-    //recupere les coordonée de l'utilisateur
+    //recupere les coordonees de l'utilisateur
     const geolocation = new ol.Geolocation({
-        // enableHighAccuracy must be set to true to have the heading value.
         tracking: true,
         trackingOptions: {
             enableHighAccuracy: true
@@ -9,7 +8,7 @@ function addGeoloc(map){
         projection: map.getView().getProjection()
     });
 
-    //gestion des erreur de geolocation
+    //gestion des erreurs de geolocation
     geolocation.on('error', function(error) {
         const info = document.getElementById('err');
         info.innerHTML = error.message;
@@ -22,27 +21,7 @@ function addGeoloc(map){
         //on centre la carte si c'est pas deja mais on ne la recentre pas ensuite
         if(!centre){
             centre = true;
-            const critere = Android.getCritere();
-            if(critere) {
-                const temp = Android.getLocationCritere('' + geolocation.getPosition());
-                if(temp) {
-                    const point = JSON.parse(temp);
-                    const content = document.getElementById('popup-content');//le contenut du pop-up
-                    const overlay = map.getOverlays().getArray()[0];
-                    const distance = distanceBetween([point.lon, point.lat],geolocation.getPosition());
-                    content.innerHTML = '<p> nom: ' + point.name + '</p>'
-                        +'<p>coordonée: '+[point.lon, point.lat]+'</p>'
-                        +'<p>distance: '+distance+'</p>';
-                    overlay.setPosition([point.lon, point.lat]);
-                    map.getView().setCenter([point.lon, point.lat]);
-                }else{
-                    Android.logFromJs("centrer sur loc");
-                    map.getView().setCenter(geolocation.getPosition());
-                }
-            }else{
-                Android.logFromJs("centrer sur loc");
-                map.getView().setCenter(geolocation.getPosition());
-            }
+            map.getView().setCenter(geolocation.getPosition());
         }
     });
 
